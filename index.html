@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Coral Reef Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coral Reef</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,25 +12,19 @@
         <button onclick="showPage('equipment-page')">المعدات</button>
         <button onclick="showPage('customers-page')">العملاء</button>
         <button onclick="showPage('rentals-page')">التأجير</button>
-        <button onclick="showPage('return-page')">الإرجاع</button>
     </nav>
 
     <main id="app-container">
-        <!-- صفحة المعدات: تمت إضافة المقاس والشركة -->
-        <section id="equipment-page" class="page-section">
-            <h2>إضافة معدة جديدة</h2>
-            <form id="equipment-form">
-                <input type="text" id="eq-serial" placeholder="السيريال نمبر" required>
-                <input type="text" id="eq-company" placeholder="الشركة المصنعة" required>
-                <input type="text" id="eq-type" placeholder="نوع المعدة" required>
-                <input type="text" id="eq-size" placeholder="المقاس" required>
-                <input type="text" id="eq-color" placeholder="اللون" required>
-                <input type="number" id="eq-price" placeholder="سعر التأجير اليومي" required>
-                <button type="submit">إضافة المعدة</button>
-            </form>
+        <section id="equipment-page" class="page-section" style="display: block;">
+            <h2>إضافة معدة</h2>
+            <!-- نموذجك هنا -->
         </section>
-        
-        <!-- بقية الصفحات توضع هنا بنفس هذا التنسيق -->
+        <section id="customers-page" class="page-section" style="display: none;">
+            <h2>إضافة عميل</h2>
+        </section>
+        <section id="rentals-page" class="page-section" style="display: none;">
+            <h2>التأجير</h2>
+        </section>
     </main>
     <script src="app.js"></script>
 </body>
