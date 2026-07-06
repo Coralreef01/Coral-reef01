@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Coral Reef Center</title>
+    <title>Coral Reef Manager</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,21 +11,25 @@
         <button onclick="showPage('equipment-page')">المعدات</button>
         <button onclick="showPage('customers-page')">العملاء</button>
         <button onclick="showPage('rentals-page')">التأجير</button>
-        <button onclick="showPage('return-page')">إرجاع</button>
-        <button onclick="showPage('stats-page')">التقارير</button>
+        <button onclick="showPage('return-page')">الإرجاع</button>
     </nav>
-    <main>
+
+    <main id="app-container">
+        <!-- صفحة المعدات: تمت إضافة المقاس والشركة -->
         <section id="equipment-page" class="page-section">
-            <h2>إضافة معدة</h2>
+            <h2>إضافة معدة جديدة</h2>
             <form id="equipment-form">
                 <input type="text" id="eq-serial" placeholder="السيريال نمبر" required>
                 <input type="text" id="eq-company" placeholder="الشركة المصنعة" required>
                 <input type="text" id="eq-type" placeholder="نوع المعدة" required>
+                <input type="text" id="eq-size" placeholder="المقاس" required>
+                <input type="text" id="eq-color" placeholder="اللون" required>
                 <input type="number" id="eq-price" placeholder="سعر التأجير اليومي" required>
-                <button type="submit">حفظ</button>
+                <button type="submit">إضافة المعدة</button>
             </form>
         </section>
-        <!-- بقية الصفحات بنفس الترتيب السابق -->
+        
+        <!-- بقية الصفحات توضع هنا بنفس هذا التنسيق -->
     </main>
     <script src="app.js"></script>
 </body>
