@@ -1,11 +1,6 @@
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f8ff; margin: 0; padding: 0; }
-header { background-color: #87ceeb; color: white; padding: 15px; text-align: center; border-bottom: 3px solid #ff8c00; }
-nav { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-nav button { background-color: #ff8c00; color: white; border: none; padding: 10px 15px; margin: 5px; cursor: pointer; border-radius: 5px; }
-nav button:hover { background-color: #e07b00; }
-main { padding: 20px; max-width: 600px; margin: 0 auto; }
-.page-section { background: white; border: 2px solid #87ceeb; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #87ceeb; border-radius: 5px; box-sizing: border-box; }
-button[type="submit"], .btn-link, .serial-scan-zone button { background-color: #ff8c00; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; }
-.preview-box { background: #e0f2fe; padding: 15px; margin: 10px 0; border-radius: 4px; border-right: 5px solid #ff8c00; }
-.rental-card { background: #fdfdfd; border: 1px solid #ddd; border-right: 5px solid #87ceeb; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+body { background-color: #0a0a0a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; }
+header { background: linear-gradient(135deg, #000, #1a1a1a); border-bottom: 2px solid #ff8c00; padding: 20px; text-align: center; }
+.page-section { background: #121212; border: 1px solid #333; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 600px; }
+input { background: #1e1e1e; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; width: 100%; margin: 10px 0; }
+button { background: #ff8c00; color: #000; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+button:hover { background: #e07b00; }
