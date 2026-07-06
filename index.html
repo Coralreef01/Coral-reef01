@@ -26,42 +26,131 @@
         <!-- 1. صفحة المعدات -->
         <section id="equipment-page" class="page-section">
             <div class="section-title">إضافة معدة جديدة</div>
-            <form id="equipment-form">
-                <div class="form-group"><label>السيريال نمبر للمعدة</label><input type="text" id="eq-serial" required></div>
-                <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="eq-company" required></div>
-                <div class="form-group"><label>نوع المعدة</label><input type="text" id="eq-type" required></div>
-                <div class="form-group"><label>المقاس</label><input type="text" id="eq-size" required></div>
-                <div class="form-group"><label>اللون</label><input type="text" id="eq-color" required></div>
-                <div class="form-group"><label>سعر التأجير اليومي (ريال)</label><input type="number" id="eq-price" required></div>
-                <button type="submit" class="btn-submit">حفظ وتخزين المعدة</button>
-            </form>
+            <div class="form-container">
+                <div class="form-group"><label>السيريال نمبر للمعدة</label><input type="text" id="eq-serial" placeholder="مثال: 12345"></div>
+                <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="eq-company"></div>
+                <div class="form-group"><label>نوع المعدة</label><input type="text" id="eq-type" placeholder="مثال: سترة غوص"></div>
+                <div class="form-group"><label>المقاس</label><input type="text" id="eq-size"></div>
+                <div class="form-group"><label>اللون</label><input type="text" id="eq-color"></div>
+                <div class="form-group"><label>سعر التأجير اليومي (ريال)</label><input type="number" id="eq-price"></div>
+                <button type="button" class="btn-submit" onclick="saveEquipment()">حفظ وتخزين المعدة</button>
+            </div>
         </section>
 
-        <!-- 2. صفحة إدارة العملاء (معدلة بالسيريال التلقائي) -->
+        <!-- 2. صفحة العملاء -->
         <section id="customers-page" class="page-section">
             <div class="section-title">تسجيل عميل جديد</div>
-            <form id="customer-form">
+            <div class="form-container">
                 <div class="form-group">
                     <label>رقم العميل الموحد (تلقائي)</label>
                     <input type="text" id="cust-serial-auto" readonly style="background: #222; color: #ff8c00; font-weight: bold; text-align: center;">
                 </div>
-                <div class="form-group"><label>رقم الهوية / الإقامة</label><input type="text" id="cust-id" required></div>
-                <div class="form-group"><label>اسم العميل بالكامل</label><input type="text" id="cust-name" required></div>
-                <div class="form-group"><label>رقم الجوال</label><input type="tel" id="cust-phone" required></div>
+                <div class="form-group"><label>رقم الهوية / الإقامة</label><input type="text" id="cust-id"></div>
+                <div class="form-group"><label>اسم العميل بالكامل</label><input type="text" id="cust-name"></div>
+                <div class="form-group"><label>رقم الجوال</label><input type="tel" id="cust-phone"></div>
                 <div class="form-group"><label>المركز التابع له</label><input type="text" id="cust-center"></div>
                 <div class="form-group"><label>رقم رخصة الغوص</label><input type="text" id="cust-license"></div>
-                <button type="submit" class="btn-submit">تسجيل وتأكيد العميل</button>
-            </form>
+                <button type="button" class="btn-submit" onclick="saveCustomer()">تسجيل وتأكيد العميل</button>
+            </div>
         </section>
 
-        <!-- 3. صفحة إنشاء فاتورة تأجير (البحث الذكي) -->
+        <!-- 3. صفحة التأجير -->
         <section id="rentals-page" class="page-section">
             <div class="section-title">إنشاء فاتورة تأجير جديدة</div>
-            <form id="rental-form">
+            <div class="form-container">
                 <div class="search-box-zone">
                     <label style="color: #ff8c00; font-weight: bold;">البحث برقم العميل (00001) أو رقم الهوية:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <input type="text" id="search-customer-id" placeholder="أدخل رقم العميل أو الهوية للبحث">
+                        <input type="text" id="search-customer-id" placeholder="أدخل رقم العميل أو الهوية">
+                        <button type="button" onclick="searchCustomer()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">بحث 🔍</button>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>اسم العميل</label><input type="text" id="rental-customer-name" readonly placeholder="سيظهر بعد البحث"></div>
+                <div class="form-group"><label>رقم جوال العميل</label><input type="tel" id="rental-customer-phone" readonly placeholder="سيظهر بعد البحث"></div>
+                
+                <div class="equipment-selection-zone">
+                    <label style="color: #ff8c00; font-weight: bold;">اختيار المعدات المتاحة للتأجير:</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px; margin-bottom: 15px;">
+                        <select id="available-equipment-select" style="width: 100%; background: #1e1e1e; color: #fff; padding: 10px; border-radius: 8px; border: 1px solid #444;"></select>
+                        <button type="button" onclick="addSelectedEquipmentToInvoice()" style="width: auto; padding: 0 20px; background: #ff8c00; color: #000; font-weight: bold;">+ إضافة</button>
+                    </div>
+                    <div id="selected-items-preview"></div>
+                </div>
+
+                <div class="form-group"><label>عدد أيام التأجير</label><input type="number" id="rental-days" value="1" min="1" oninput="calculateTotal()"></div>
+                <div class="form-group"><label>قيمة الخصم إن وُجد (ريال)</label><input type="number" id="rental-discount" value="0" oninput="calculateTotal()"></div>
+
+                <div class="total-price-box">
+                    <span>الإجمالي النهائي الحقيقي:</span>
+                    <strong><span id="final-total">0</span> ريال</strong>
+                </div>
+
+                <button type="button" class="btn-submit" onclick="saveRental()">إصدار الفاتورة وإرسالها بالواتساب</button>
+            </div>
+        </section>
+
+        <!-- 4. صفحة الإرجاع -->
+        <section id="return-page" class="page-section">
+            <div class="section-title">إرجاع واستلام المعدات</div>
+            <div class="form-container">
+                <div class="search-box-zone">
+                    <label style="color: #ff8c00; font-weight: bold;">ابحث برقم الفاتورة أو رقم العميل أو الهوية:</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="text" id="return-search-input" placeholder="مثال: R-1234">
+                        <button type="button" onclick="searchReturnData()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">جلب 📁</button>
+                    </div>
+                </div>
+
+                <div id="invoice-details-card" class="details-card" style="display: none;">
+                    <p><strong>رقم الفاتورة:</strong> <span id="ret-invoice-id" style="color: #ff8c00; font-weight: bold;">-</span></p>
+                    <p><strong>اسم العميل:</strong> <span id="ret-cust-name">-</span></p>
+                    <p><strong>المعدات:</strong> <span id="ret-eq-details" style="color: #ff8c00;">-</span></p>
+                    <p><strong>الإجمالي:</strong> <span id="ret-total">-</span> ريال</p>
+                </div>
+
+                <div class="damage-control-zone">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="is-damaged-checkbox" onchange="toggleDamageNote()">
+                        <span style="color: #ff3333; font-weight: bold; margin-right: 10px;">تنبيه: تم رصد ضرر أو تلف!</span>
+                    </label>
+                </div>
+
+                <div class="form-group" id="damage-note-container" style="display: none; margin-top: 15px;">
+                    <label style="color: #ff3333;">تفاصيل الضرر</label>
+                    <textarea id="damage-note" rows="3" placeholder="اكتب الملاحظة الفنية..."></textarea>
+                </div>
+
+                <button type="button" class="btn-submit" style="background: #ff3333; color: #fff; margin-top: 20px;" onclick="saveReturn()">تأكيد الاستلام وإغلاق الملف</button>
+            </div>
+        </section>
+
+        <!-- 5. صفحة الإحصائيات -->
+        <section id="stats-page" class="page-section">
+            <div class="section-title">📊 ملخص المعدات</div>
+            <div style="overflow-x: auto;">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>السيريال</th>
+                            <th>المعدة</th>
+                            <th>مرات التأجير</th>
+                            <th>إجمالي الأيام</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-table-body">
+                        <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- أضفنا ?v=2 للرابط لإجبار المتصفح على تحديث الكاش فوراً -->
+    <script src="app.js?v=2"></script>
+</body>
+</html>
                         <button type="button" onclick="searchCustomer()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">بحث 🔍</button>
                     </div>
                 </div>
