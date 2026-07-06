@@ -1,9 +1,11 @@
+// ضع رابط الـ Web App الخاص بجوجل شيت هنا بين علامتي التنصيص الحاضنة
 const GOOGLE_SCRIPT_URL = 'ضع_رابط_جوجل_شيت_هنا'; 
 
 let tempSelectedItems = []; 
 let localCustomers = JSON.parse(localStorage.getItem('localCustomers')) || [];
 let localEquipment = JSON.parse(localStorage.getItem('localEquipment')) || [];
 let localRentals = JSON.parse(localStorage.getItem('localRentals')) || [];
+let currentActiveCustomer = null; // لتخزين بيانات العميل الذي تم البحث عنه حالياً
 
 // دالة التنقل بين الصفحات
 function showPage(pageId) {
@@ -15,45 +17,66 @@ function showPage(pageId) {
         targetPage.style.setProperty('display', 'block', 'important');
         window.scrollTo(0, 0);
     }
+    if (pageId === 'customers-page') updateNextCustomerSerial();
     if (pageId === 'rentals-page') updateEquipmentDropdown();
     if (pageId === 'stats-page') renderStatsTable();
 }
 
+// تحديث وعرض السيريال التلقائي للعميل القادم (خمس أصفار متصاعدة)
+function updateNextCustomerSerial() {
+    const input = document.getElementById('cust-serial-auto');
+    if (input) {
+        let nextSerial = String(localCustomers.length + 1).padStart(5, '0');
+        input.value = nextSerial;
+    }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     showPage('equipment-page');
+    updateNextCustomerSerial();
     updateEquipmentDropdown();
 });
 
-// تحديث قائمة المعدات المتاحة في صفحة التأجير
+// تحديث قائمة الاختيار المنسدلة للمعدات
 function updateEquipmentDropdown() {
     const select = document.getElementById('available-equipment-select');
     if (!select) return;
     select.innerHTML = '';
+    
     if (localEquipment.length === 0) {
-        select.innerHTML = '<option value="">لا توجد معدات مسجلة بالنظام</option>';
+        let opt = document.createElement('option');
+        opt.value = "";
+        opt.text = "⚠️ لا توجد معدات مسجلة بالنظام حالياً";
+        select.appendChild(opt);
         return;
     }
+    
     localEquipment.forEach((eq, index) => {
         const option = document.createElement('option');
         option.value = index;
-        option.text = `${eq.type} - ${eq.company} (${eq.color} / مقاس: ${eq.size}) | ${eq.price} ريال`;
+        option.text = `${eq.type} - ${eq.company} (سيريال: ${eq.serial} | مقاس: ${eq.size}) | ${eq.price} ريال`;
         select.appendChild(option);
     });
 }
 
-// إضافة المعدة المختارة حقيقياً إلى الفاتورة الحالية
+// إضافة المعدة المختارة للفاتورة مع حماية من الأخطاء
 function addSelectedEquipmentToInvoice() {
     const select = document.getElementById('available-equipment-select');
-    if (!select || select.value === "") return;
-    const eq = localEquipment[select.value];
+    if (!select || select.value === "") {
+        alert("⚠️ لا توجد أي معدة مختارة! الرجاء إضافة معدات أولاً من صفحة (المعدات) وتأكيد اختيارها من القائمة هنا.");
+        return;
+    }
     
+    const eq = localEquipment[select.value];
     tempSelectedItems.push(eq);
     
     const previewZone = document.getElementById('selected-items-preview');
-    const itemBadge = document.createElement('div');
-    itemBadge.style.cssText = "background: #1e1e1e; padding: 10px; margin: 5px 0; border-radius: 6px; border-right: 4px solid #ff8c00; font-size: 14px; display: flex; justify-content: space-between;";
-    itemBadge.innerHTML = `<span>🤿 ${eq.type} (${eq.company} - مقاس: ${eq.size})</span> <strong>${eq.price} ريال/يوم</strong>`;
-    previewZone.appendChild(itemBadge);
+    if (previewZone) {
+        const itemBadge = document.createElement('div');
+        itemBadge.style.cssText = "background: #1e1e1e; padding: 10px; margin: 5px 0; border-radius: 6px; border-right: 4px solid #ff8c00; font-size: 14px; display: flex; justify-content: space-between;";
+        itemBadge.innerHTML = `<span>🤿 ${eq.type} (${eq.company} - S/N: ${eq.serial})</span> <strong>${eq.price} ريال/يوم</strong>`;
+        previewZone.appendChild(itemBadge);
+    }
     
     calculateTotal();
 }
@@ -66,47 +89,67 @@ function calculateTotal() {
     document.getElementById('final-total').innerText = total < 0 ? 0 : total;
 }
 
-// خاصية البحث الذكي برقم الهوية للعميل
+// البحث الذكي عن العميل برقم العميل الموحد أو رقم الهوية الوطنية
 function searchCustomer() {
     const idToSearch = document.getElementById('search-customer-id').value.trim();
-    const customer = localCustomers.find(c => c.id === idToSearch);
+    if(!idToSearch) { alert("الرجاء إدخال قيمة للبحث!"); return; }
+    
+    // البحث عن تطابق في السيريال التلقائي أو رقم الهوية الحقيقي
+    const customer = localCustomers.find(c => c.serial === idToSearch || c.id === idToSearch);
     
     if (customer) {
+        currentActiveCustomer = customer;
         document.getElementById('rental-customer-name').value = customer.name;
         document.getElementById('rental-customer-phone').value = customer.phone;
-        alert(`تم العثور على العميل: ${customer.name}`);
+        alert(`✅ تم العثور على العميل بنجاح: ${customer.name} (رقم موحد: ${customer.serial})`);
     } else {
-        alert("عذراً، رقم الهوية غير مسجل بالنظام. الرجاء تسجيل العميل أولاً من صفحة العملاء.");
+        currentActiveCustomer = null;
+        alert("❌ عذراً، رقم العميل أو الهوية غير مسجل بالنظام. الرجاء تسجيله أولاً من صفحة العملاء.");
     }
 }
 
-// خاصية البحث الذكي برقم الفاتورة عند الإرجاع
-function searchInvoice() {
-    const invoiceId = document.getElementById('return-invoice-id').value.trim();
-    const rental = localRentals.find(r => r.invoiceId === invoiceId);
+// جلب تفاصيل الفاتورة عند الإرجاع بالبحث الشامل (رقم الفاتورة أو رقم العميل أو الهوية)
+function searchReturnData() {
+    const searchValue = document.getElementById('return-search-input').value.trim();
+    if(!searchValue) { alert("الرجاء إدخال رقم فاتورة أو عميل للبحث!"); return; }
+    
+    // البحث عن آخر عملية تأجير نشطة تطابق رقم الفاتورة أو هوية العميل أو سيريال العميل
+    const rental = localRentals.slice().reverse().find(r => 
+        r.invoiceId === searchValue || 
+        r.customerSerial === searchValue || 
+        r.customerId === searchValue
+    );
     
     if (rental) {
+        document.getElementById('ret-invoice-id').innerText = rental.invoiceId;
         document.getElementById('ret-cust-name').innerText = rental.customer;
         document.getElementById('ret-cust-phone').innerText = rental.phone || 'غير مسجل';
         document.getElementById('ret-eq-details').innerText = rental.equipmentDetails;
         document.getElementById('ret-total').innerText = rental.total;
         document.getElementById('invoice-details-card').style.display = 'block';
+        alert(`✅ تم العثور على الفاتورة الحالية رقم: ${rental.invoiceId}`);
     } else {
-        alert("الفاتورة غير موجودة أو تم إغلاقها مسبقاً.");
+        alert("❌ لم يتم العثور على أي عمليات تأجير مفتوحة تحت هذا الرقم.");
         document.getElementById('invoice-details-card').style.display = 'none';
     }
 }
 
-// دالة عامة لإرسال البيانات لجوجل
+// دالة الإرسال الآمنة لمنع كراش السكربت إذا كان الرابط غير مدخل
 async function sendToGoogleSheet(payload) {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ضع_رابط_جوجل_شيت_هنا')) return true;
+    if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.startsWith('http')) {
+        console.warn("تنبيه: لم يتم ربط تطبيق جوجل شيت برابط حقيقي وصحيح حتى الآن، تم الحفظ محلياً فقط.");
+        return true;
+    }
     try {
         await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         return true;
-    } catch (e) { console.error(e); return false; }
+    } catch (e) { 
+        console.error("خطأ أثناء الرفع لجوجل شيت:", e); 
+        return false; 
+    }
 }
 
-// 1. معالجة حفظ المعدة
+// 1. حفظ المعدة
 document.getElementById('equipment-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const eq = {
@@ -121,48 +164,56 @@ document.getElementById('equipment-form')?.addEventListener('submit', async func
     localStorage.setItem('localEquipment', JSON.stringify(localEquipment));
     
     await sendToGoogleSheet({ action: 'addEquipment', ...eq });
-    alert("تم حفظ المعدة بنجاح بالنظام المحلي وجوجل شيت!");
+    alert("👍 تم حفظ المعدة بنجاح في النظام وفي جوجل شيت!");
     this.reset();
+    updateEquipmentDropdown();
 });
 
-// 2. معالجة حفظ العميل
+// 2. حفظ العميل مع السيريال التلقائي التصاعدي
 document.getElementById('customer-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
+    let assignedSerial = String(localCustomers.length + 1).padStart(5, '0');
+    
     const cust = {
+        serial: assignedSerial,
         id: document.getElementById('cust-id').value,
         name: document.getElementById('cust-name').value,
         phone: document.getElementById('cust-phone').value,
         center: document.getElementById('cust-center').value,
         license: document.getElementById('cust-license').value
     };
+    
     localCustomers.push(cust);
     localStorage.setItem('localCustomers', JSON.stringify(localCustomers));
     
-    await sendToGoogleSheet({ action: 'addCustomer', customerSerial: cust.id, ...cust });
-    alert("تم تسجيل العميل بنجاح!");
+    await sendToGoogleSheet({ action: 'addCustomer', customerSerial: cust.serial, ...cust });
+    alert(`👍 تم تسجيل العميل بنجاح! السيريال الموحد له هو: ${assignedSerial}`);
     this.reset();
+    updateNextCustomerSerial();
 });
 
-// 3. معالجة إصدار الفاتورة وإرسال واتساب
+// 3. إصدار الفاتورة وإرسال واتساب للعميل المختار تلقائياً
 document.getElementById('rental-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    if (tempSelectedItems.length === 0) { alert("أضف معدات أولاً!"); return; }
+    if (tempSelectedItems.length === 0) { alert("⚠️ الرجاء اختيار معدة واحدة على الأقل قبل إصدار الفاتورة!"); return; }
     
     const invoiceSerial = 'R-' + Math.floor(1000 + Math.random() * 9000);
     const name = document.getElementById('rental-customer-name').value;
     const phone = document.getElementById('rental-customer-phone').value;
     const days = document.getElementById('rental-days').value;
     const total = document.getElementById('final-total').innerText;
-    const eqDetails = tempSelectedItems.map(i => `${i.type} (${i.company} - ${i.size})`).join(', ');
+    const eqDetails = tempSelectedItems.map(i => `${i.type} (${i.company} - مقاس: ${i.size})`).join(', ');
     
     const rentalRecord = {
         invoiceId: invoiceSerial,
+        customerSerial: currentActiveCustomer ? currentActiveCustomer.serial : '',
+        customerId: currentActiveCustomer ? currentActiveCustomer.id : '',
         customer: name,
         phone: phone,
         equipmentDetails: eqDetails,
         total: total,
         days: parseInt(days),
-        serialsUsed: tempSelectedItems.map(i => i.serial), // لحساب الإحصائيات لاحقاً
+        serialsUsed: tempSelectedItems.map(i => i.serial),
         status: 'تحت التأجير'
     };
     
@@ -171,47 +222,50 @@ document.getElementById('rental-form')?.addEventListener('submit', async functio
     
     await sendToGoogleSheet({ action: 'addRental', ...rentalRecord, date: new Date().toLocaleDateString('ar-SA') });
     
-    const msg = `أهلاً بك في Coral Reef Center 🌊\n\nتم تسجيل فاتورة تأجير رقم (${invoiceSerial}).\n\nالتفاصيل:\n- العميل: ${name}\n- المعدات: ${eqDetails}\n- المدة: ${days} أيام.\n- الإجمالي: ${total} ريال.\n\nنتمنى لك غوصة ممتعة! 🤿`;
+    const msg = `أهلاً بك في Coral Reef Center 🌊\n\nتم تسجيل فاتورة تأجير رقم (${invoiceSerial}).\n\nالتفاصيل:\n- العميل: ${name}\n- المعدات: ${eqDetails}\n- المدة: ${days} أيام.\n- الإجمالي: ${total} ريال.\n\nنتمنى لك غوصة ممتعة وآمنة! 🤿`;
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
     
     tempSelectedItems = [];
     document.getElementById('selected-items-preview').innerHTML = '';
     document.getElementById('final-total').innerText = '0';
+    currentActiveCustomer = null;
     this.reset();
 });
 
-// 4. معالجة الإرجاع
+// 4. تأكيد الإرجاع ومطالبة الأضرار والتالف
 document.getElementById('return-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const invId = document.getElementById('return-invoice-id').value;
+    const invId = document.getElementById('ret-invoice-id').innerText;
+    if (invId === '-' || !invId) { alert("الرجاء البحث عن الفاتورة أولاً وجلب بياناتها!"); return; }
+    
     const isDamaged = document.getElementById('is-damaged-checkbox').checked;
     const damageNote = document.getElementById('damage-note').value;
+    let statusText = isDamaged ? `تالفة: ${damageNote}` : 'مستلمة سليمة';
     
     let rentalIndex = localRentals.findIndex(r => r.invoiceId === invId);
     if(rentalIndex !== -1) {
-        localRentals[rentalIndex].status = isDamaged ? `تالفة: ${damageNote}` : 'مستلمة سليمة';
+        localRentals[rentalIndex].status = statusText;
         localStorage.setItem('localRentals', JSON.stringify(localRentals));
     }
     
-    await sendToGoogleSheet({ action: 'updateStatus', invoiceId: invId, status: isDamaged ? `تالفة: ${damageNote}` : 'مستلمة سليمة' });
-    alert("تم تحديث حالة المستودع بنجاح!");
+    await sendToGoogleSheet({ action: 'updateStatus', invoiceId: invId, status: statusText });
+    alert("👍 تم استلام المعدات وإغلاق ملف الفاتورة بنجاح!");
     this.reset();
     document.getElementById('invoice-details-card').style.display = 'none';
 });
 
-// 5. دالة بناء جدول الإحصائيات السنوي الحي للمعدات
+// 5. بناء كشف حساب الإحصائيات وجدول التحليل السنوي
 function renderStatsTable() {
     const tbody = document.getElementById('stats-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
     
     if (localEquipment.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد معدات مسجلة لحساب إحصائياتها.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد معدات مسجلة حتى الآن لعرضها.</td></tr>';
         return;
     }
     
     localEquipment.forEach(eq => {
-        // حساب كم مرة ظهر سيريال هذه المعدة في الفواتير المسجلة
         let timesRented = 0;
         let totalDaysRented = 0;
         
@@ -233,187 +287,10 @@ function renderStatsTable() {
     });
 }
 
+// مراقبة تفعيل حقل الأضرار والتالف
 document.getElementById('is-damaged-checkbox')?.addEventListener('change', function() {
     document.getElementById('damage-note-container').style.display = this.checked ? 'block' : 'none';
 });
-        console.error("خطأ في إرسال البيانات لجوجل شيت:", error);
-        return false;
-    }
-}
-
-// 5. إدارة نموذج إضافة "المعدات" (المقاس، الشركة، اللون، السيريال)
-const equipmentForm = document.getElementById('equipment-form');
-if (equipmentForm) {
-    equipmentForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const payload = {
-            action: 'addEquipment',
-            serial: document.getElementById('eq-serial').value,
-            company: document.getElementById('eq-company').value,
-            type: document.getElementById('eq-type').value,
-            size: document.getElementById('eq-size').value,
-            color: document.getElementById('eq-color').value,
-            price: document.getElementById('eq-price').value
-        };
-        
-        alert("جاري حفظ المعدة...");
-        await sendToGoogleSheet(payload);
-        alert("تم حفظ المعدة بنجاح في النظام!");
-        this.reset();
-    });
-}
-
-// 6. إدارة نموذج إضافة "العملاء"
-const customerForm = document.getElementById('customer-form');
-if (customerForm) {
-    customerForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const payload = {
-            action: 'addCustomer',
-            customerSerial: document.getElementById('cust-serial').value,
-            name: document.getElementById('cust-name').value,
-            phone: document.getElementById('cust-phone').value,
-            id: document.getElementById('cust-id').value,
-            center: document.getElementById('cust-center').value,
-            license: document.getElementById('cust-license').value
-        };
-        
-        alert("جاري حفظ بيانات العميل...");
-        await sendToGoogleSheet(payload);
-        alert("تم تسجيل العميل بنجاح!");
-        this.reset();
-    });
-}
-
-// 7. إدارة عملية "التأجير" وإرسال رسالة واتساب التلقائية
-const rentalForm = document.getElementById('rental-form');
-if (rentalForm) {
-    // مستمع لتحديث السعر فوراً عند تغيير الأيام أو الخصم
-    document.getElementById('rental-days')?.addEventListener('input', calculateTotal);
-    document.getElementById('rental-discount')?.addEventListener('input', calculateTotal);
-
-    rentalForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        if (tempSelectedItems.length === 0) {
-            alert("الرجاء إضافة معدة واحدة على الأقل للفاتورة!");
-            return;
-        }
-        
-        const invoiceSerial = 'R-' + Math.floor(1000 + Math.random() * 9000);
-        const total = document.getElementById('final-total').innerText;
-        const days = document.getElementById('rental-days').value;
-        const customerName = document.getElementById('rental-customer-name').value;
-        const customerPhone = document.getElementById('rental-customer-phone').value;
-        
-        const equipmentDetails = tempSelectedItems.map(i => `${i.type} (${i.company} - مقاس: ${i.size})`).join(', ');
-        
-        const payload = {
-            action: 'addRental',
-            invoiceId: invoiceSerial,
-            date: new Date().toLocaleDateString('ar-SA'),
-            customer: customerName,
-            equipmentDetails: equipmentDetails,
-            total: total,
-            status: 'معلقة (تحت التأجير)'
-        };
-        
-        alert("جاري تسجيل الفاتورة...");
-        await sendToGoogleSheet(payload);
-        
-        // صياغة رسالة الواتساب الفخمة للعميل بدون روابط صور
-        const whatsappMessage = `أهلاً بك في Coral Reef Center 🌊\n\nتم تسجيل فاتورة تأجير رقم (${invoiceSerial}) بنجاح.\n\nتفاصيل العملية:\n- العميل: ${customerName}\n- المعدات: ${equipmentDetails}\n- المدة: ${days} أيام.\n- الإجمالي: ${total} ريال.\n\nفي حال استلام جميع المعدات المذكورة أعلاه بحالة سليمة، يرجى الرد على هذه الرسالة بكلمة (تم الاستلام) لتأكيدها بملفك.\n\nنتمنى لك غوصة ممتعة وآمنة! 🤿`;
-        
-        // فتح الواتساب مباشرة برقم العميل إن وجد أو عام
-        const phoneFormatted = customerPhone.replace(/\D/g, '');
-        const waUrl = phoneFormatted ? `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(whatsappMessage)}` : `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
-        
-        window.open(waUrl, '_blank');
-        
-        // تصفير البيانات بعد النجاح
-        tempSelectedItems = [];
-        const previewZone = document.getElementById('selected-items-preview');
-        if (previewZone) previewZone.innerHTML = '';
-        document.getElementById('final-total').innerText = '0';
-        this.reset();
-        alert("تمت العملية بنجاح وفتح الواتساب!");
-    });
-}
-
-// دالة مساعدة لإضافة معدة مؤقتاً في الفاتورة الحالية (يتم استدعاؤها من واجهة الأزرار)
-function addItemToInvoice(type, company, size, price) {
-    tempSelectedItems.push({ type, company, size, price });
-    
-    // تحديث العرض المرئي للموظف في الصفحة
-    const previewZone = document.getElementById('selected-items-preview');
-    if (previewZone) {
-        const itemBadge = document.createElement('div');
-        itemBadge.style.cssText = "background: #1e1e1e; padding: 8px; margin: 5px 0; border-radius: 6px; border-right: 4px solid #ff8c00; font-size: 14px;";
-        itemBadge.innerText = `📁 ${type} - ${company} (مقاس: ${size}) | ${price} ريال/يوم`;
-        previewZone.appendChild(itemBadge);
-    }
-    calculateTotal();
-}
-
-// 8. إدارة صفحة "الإرجاع والاستلام" ومطالبة الأضرار
-const returnForm = document.getElementById('return-form');
-if (returnForm) {
-    returnForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const invoiceId = document.getElementById('return-invoice-id').value;
-        const customerPhone = document.getElementById('return-customer-phone').value;
-        const isDamaged = document.getElementById('is-damaged-checkbox').checked;
-        const damageNote = document.getElementById('damage-note').value;
-        
-        let statusText = 'مستلمة (كاملة وسليمة)';
-        if (isDamaged) {
-            statusText = `تالفة (ملاحظة: ${damageNote})`;
-        }
-        
-        const payload = {
-            action: 'updateStatus',
-            invoiceId: invoiceId,
-            status: statusText
-        };
-        
-        alert("جاري تحديث حالة الفاتورة...");
-        await sendToGoogleSheet(payload);
-        
-        // صياغة رسالة الإرجاع للعميل
-        let returnMessage = `تحية من Coral Reef Center 🌊\n\nتم إنهاء وإغلاق الفاتورة رقم (${invoiceId}).\n\n✅ تم استلام المعدات وفحصها بحالة سليمة.\n\nشكراً لتعاملكم معنا ونتطلع لرؤيتكم مجدداً في مغامرة أخرى! 🤿`;
-        
-        if (isDamaged) {
-            returnMessage = `تنبيه من Coral Reef Center 🌊\n\nتم استلام معدات الفاتورة رقم (${invoiceId}).\n\n⚠️ رصد تقرير الفحص الفني وجود تلف/إشكالية في المعدة المرجعة:\n- الملاحظة: ${damageNote}\n\nتم تسجيل الملاحظة بملفكم، وسيتم التواصل معكم من القسم المختص لاحقاً لإرسال تقرير الضرر المخبري. شكراً لتفهمكم.`;
-        }
-        
-        const phoneFormatted = customerPhone.replace(/\D/g, '');
-        const waUrl = phoneFormatted ? `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(returnMessage)}` : `https://wa.me/?text=${encodeURIComponent(returnMessage)}`;
-        
-        window.open(waUrl, '_blank');
-        this.reset();
-        alert("تم إغلاق الفاتورة وإرسال التقرير عبر واتساب!");
-    });
-}
-
-// تفعيل إظهار وإخفاء حقل الملاحظات في الإرجاع تلقائياً عند الضغط على تالفة
-const damageCheckbox = document.getElementById('is-damaged-checkbox');
-if (damageCheckbox) {
-    damageCheckbox.addEventListener('change', function() {
-        const noteContainer = document.getElementById('damage-note-container');
-        if (noteContainer) {
-            noteContainer.style.display = this.checked ? 'block' : 'none';
-        }
-    });
-}
-
-// 9. تفعيل تطبيق الـ PWA (Service Worker)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker Registered successfully', reg.scope))
-            .catch(err => console.log('Service Worker Registration failed', err));
-    });
-}
+// تحديث الأسعار الفورية عند تغيير المدة أو الخصم يدوياً
+document.getElementById('rental-days')?.addEventListener('input', calculateTotal);
+document.getElementById('rental-discount')?.addEventListener('input', calculateTotal);
