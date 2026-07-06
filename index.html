@@ -3,29 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coral Reef</title>
+    <title>Coral Reef Manager</title>
+    <!-- ربط ملف التصميم الأسود الفخم -->
     <link rel="stylesheet" href="style.css">
+    <!-- ربط ملف الـ Manifest لتشغيل التطبيق كـ PWA على الجوال -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <header><h1>Coral Reef Center</h1></header>
+
+    <!-- الهيدر العلوي للتطبيق -->
+    <header>
+        <h1>Coral Reef Center</h1>
+    </header>
+
+    <!-- شريط التنقل السفلي أو العلوي السلس (حل مشكلة التنقل) -->
     <nav>
-        <button onclick="showPage('equipment-page')">المعدات</button>
-        <button onclick="showPage('customers-page')">العملاء</button>
-        <button onclick="showPage('rentals-page')">التأجير</button>
+        <button onclick="showPage('equipment-page')">🤿 المعدات</button>
+        <button onclick="showPage('customers-page')">👥 العملاء</button>
+        <button onclick="showPage('rentals-page')">📝 التأجير</button>
+        <button onclick="showPage('return-page')">🔄 الإرجاع</button>
     </nav>
 
+    <!-- الحاوية الرئيسية لكافة الصفحات -->
     <main id="app-container">
-        <section id="equipment-page" class="page-section" style="display: block;">
-            <h2>إضافة معدة</h2>
-            <!-- نموذجك هنا -->
+
+        <!-- 1. صفحة المعدات (معدلة: إضافة المقاس، الشركة، واللون) -->
+        <section id="equipment-page" class="page-section">
+            <div class="section-title">إضافة معدة جديدة</div>
+            <form id="equipment-form">
+                <div class="form-group">
+                    <label>السيريال نمبر</label>
+                    <input type="text" id="eq-serial" placeholder="أدخل السيريال نمبر الخاص بالمعدة" required>
+                </div>
+                <div class="form-group">
+                    <label>الشركة المصنعة</label>
+                    <input type="text" id="eq-company" placeholder="مثال: Cressi, Mares, Scubapro" required>
+                </div>
+                <div class="form-group">
+                    <label>نوع المعدة</label>
+                    <input type="text" id="eq-type" placeholder="مثال: منظم، بدلة، زعانف" required>
+                </div>
+                <div class="form-group">
+                    <label>المقاس</label>
+                    <input type="text" id="eq-size" placeholder="مثال: S, M, L, XL أو مقاس رقمي" required>
+                </div>
+                <div class="form-group">
+                    <label>اللون</label>
+                    <input type="text" id="eq-color" placeholder="أدخل لون المعدة" required>
+                </div>
+                <div class="form-group">
+                    <label>سعر التأجير اليومي (ريال)</label>
+                    <input type="number" id="eq-price" placeholder="0.00" required>
+                </div>
+                <button type="submit" class="btn-submit">حفظ وتخزين المعدة</button>
+            </form>
         </section>
-        <section id="customers-page" class="page-section" style="display: none;">
-            <h2>إضافة عميل</h2>
+
+        <!-- 2. صفحة إدارة العملاء -->
+        <section id="customers-page" class="page-section">
+            <div class="section-title">تسجيل عميل جديد</div>
+            <form id="customer-form">
+                <div class="form-group">
+                    <label>رقم العضوية / السيريال</label>
+                    <input type="text" id="cust-serial" placeholder="رقم تسلسلي خاص بالعميل">
+                </div>
+                <div class="form-group">
+                    <label>اسم العميل الثنائي/الثلاثي</label>
+                    <input type="text" id="cust-name" placeholder="أدخل اسم العميل بالكامل" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الجوال (بدون مفتاح الدولة أو معه)</label>
+                    <input type="tel" id="cust-phone" placeholder="مثال: 05xxxxxxx" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الهوية / الإقامة</label>
+                    <input type="text" id="cust-id" placeholder="أدخل رقم الهوية الوطنية أو الإقامة" required>
+                </div>
+                <div class="form-group">
+                    <label>المركز التابع له (إن وجد)</label>
+                    <input type="text" id="cust-center" placeholder="اسم مركز الغوص أو المنظمة">
+                </div>
+                <div class="form-group">
+                    <label>رقم رخصة الغوص</label>
+                    <input type="text" id="cust-license" placeholder="رقم رخصة PADI / SSI الدولية">
+                </div>
+                <button type="submit" class="btn-submit">تسجيل وتأكيد العميل</button>
+            </form>
         </section>
-        <section id="rentals-page" class="page-section" style="display: none;">
-            <h2>التأجير</h2>
+
+        <!-- 3. صفحة إنشاء فاتورة تأجير -->
+        <section id="rentals-page" class="page-section">
+            <div class="section-title">إنشاء فاتورة تأجير جديدة</div>
+            <form id="rental-form">
+                <div class="form-group">
+                    <label>اسم العميل الحالي</label>
+                    <input type="text" id="rental-customer-name" placeholder="اكتب اسم العميل لتسجيل الفاتورة" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم جوال العميل (لإرسال الواتساب)</label>
+                    <input type="tel" id="rental-customer-phone" placeholder="05xxxxxxx" required>
+                </div>
+                
+                <!-- منطقة الفحص السريع لإضافة المعدات المؤقتة -->
+                <div class="invoice-builder-zone">
+                    <p style="font-size: 13px; color: #aaa; margin-bottom: 5px;">* أضف المعدات الحالية المسلمة للعميل:</p>
+                    <div id="selected-items-preview"></div>
+                    <!-- أزرار سريعة كمثال، السيريال الحقيقي يتم عبر دالة addItemToInvoice في الكود الخلفي -->
+                    <button type="button" style="background: #222; border: 1px dashed #ff8c00; color: #ff8c00; font-size: 12px; padding: 6px;" onclick="addItemToInvoice('منظم تنظيم هواء', 'Cressi', 'Standard', 50)">+ إضافة منظم (تجربة)</button>
+                </div>
+
+                <div class="form-group">
+                    <label>عدد أيام التأجير</label>
+                    <input type="number" id="rental-days" placeholder="1" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>قيمة الخصم إن وُجد (ريال)</label>
+                    <input type="number" id="rental-discount" placeholder="0" value="0">
+                </div>
+
+                <!-- حساب الإجمالي التلقائي الفخم -->
+                <div class="total-price-box">
+                    <span>الإجمالي النهائي الحقيقي:</span>
+                    <strong><span id="final-total">0</span> ريال</strong>
+                </div>
+
+                <button type="submit" class="btn-submit" style="background: #ff8c00; color: #000;">إصدار الفاتورة وإرسالها بالواتساب</button>
+            </form>
         </section>
+
+        <!-- 4. صفحة الإرجاع وكشف الضرر والتالف -->
+        <section id="return-page" class="page-section">
+            <div class="section-title">إرجاع واستلام المعدات</div>
+            <form id="return-form">
+                <div class="form-group">
+                    <label>رقم الفاتورة المراد إغلاقها</label>
+                    <input type="text" id="return-invoice-id" placeholder="مثال: R-4829" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم جوال العميل</label>
+                    <input type="tel" id="return-customer-phone" placeholder="لتأكيد إرسال رسالة الاستلام" required>
+                </div>
+
+                <!-- حقل كشف الضرر الفخم -->
+                <div class="damage-control-zone">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="is-damaged-checkbox">
+                        <span class="custom-checkbox"></span>
+                        <span style="color: #ff3333; font-weight: bold;">تنبيه: تم رصد ضرر أو تلف في المعدة المستلمة!</span>
+                    </label>
+                </div>
+
+                <!-- يظهر هذا الحقل ديناميكياً عند تفعيل علامة الصح من كود الجافا سكربت -->
+                <div class="form-group" id="damage-note-container" style="display: none; margin-top: 15px;">
+                    <label style="color: #ff3333;">تفاصيل الضرر أو النقص الفني</label>
+                    <textarea id="damage-note" rows="3" placeholder="اكتب الملاحظة (مثال: قطع في حزام الزعانف أو تهريب في المنظم)"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit" style="background: #ff3333; color: #fff; margin-top: 20px;">تأكيد الاستلام وإغلاق الملف</button>
+            </form>
+        </section>
+
     </main>
+
+    <!-- ربط السكربت المسؤول عن المنطق وإخفاء/إظهار الصفحات والعمليات التلقائية -->
     <script src="app.js"></script>
 </body>
 </html>
