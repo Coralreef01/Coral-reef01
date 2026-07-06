@@ -1,4 +1,4 @@
-// ⚠️ هام جداً: ضع الرابط الخاص بك بين علامتي التنصيص، لا تحذف العلامتين أبداً!
+// ⚠️ هام جداً: ضع الرابط الخاص بك بين علامتي التنصيص
 const GOOGLE_SCRIPT_URL = 'ضع_رابط_جوجل_شيت_هنا'; 
 
 let tempSelectedItems = []; 
@@ -7,14 +7,14 @@ let localEquipment = JSON.parse(localStorage.getItem('localEquipment')) || [];
 let localRentals = JSON.parse(localStorage.getItem('localRentals')) || [];
 let currentActiveCustomer = null; 
 
-// دالة التنقل بين الصفحات
+// دالة التنقل الآمنة القائمة على الكلاسات لمنع التداخل نهائياً
 window.showPage = function(pageId) {
     document.querySelectorAll('.page-section').forEach(page => {
-        page.style.setProperty('display', 'none', 'important');
+        page.classList.remove('active');
     });
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
-        targetPage.style.setProperty('display', 'block', 'important');
+        targetPage.classList.add('active');
         window.scrollTo(0, 0);
     }
     if (pageId === 'customers-page') updateNextCustomerSerial();
@@ -72,8 +72,6 @@ window.calculateTotal = function() {
     document.getElementById('final-total').innerText = total < 0 ? 0 : total;
 };
 
-// --- دوال الأزرار المباشرة (التي كانت لا تعمل) ---
-
 window.saveEquipment = async function() {
     const serial = document.getElementById('eq-serial').value.trim();
     const company = document.getElementById('eq-company').value.trim();
@@ -91,10 +89,9 @@ window.saveEquipment = async function() {
     localEquipment.push(eq);
     localStorage.setItem('localEquipment', JSON.stringify(localEquipment));
     
-    sendToGoogleSheet({ action: 'addEquipment', ...eq }); // يرسل في الخلفية
+    sendToGoogleSheet({ action: 'addEquipment', ...eq });
     alert("✅ تم حفظ المعدة بنجاح!");
     
-    // تفريغ الخانات
     document.getElementById('eq-serial').value = '';
     document.getElementById('eq-company').value = '';
     document.getElementById('eq-type').value = '';
