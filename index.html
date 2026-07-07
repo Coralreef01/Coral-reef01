@@ -6,10 +6,29 @@
     <title>Coral Reef Manager</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    
     <style>
-        /* كود الحماية القاطع لمنع ظهور أكثر من صفحة */
         .page-section { display: none !important; }
         .page-section.active { display: block !important; }
+        
+        .filter-buttons-zone {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-filter {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-filter:hover {
+            background: #ff8c00;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -23,6 +42,7 @@
         <button onclick="showPage('customers-page')">👥 العملاء</button>
         <button onclick="showPage('rentals-page')">📝 التأجير</button>
         <button onclick="showPage('return-page')">🔄 الإرجاع</button>
+        <button onclick="showPage('invoices-page')">📂 الفواتير</button>
         <button onclick="showPage('stats-page')">📊 الإحصائيات</button>
     </nav>
 
@@ -50,7 +70,7 @@
                 </div>
                 <div class="form-group"><label>رقم الهوية / الإقامة</label><input type="text" id="cust-id"></div>
                 <div class="form-group"><label>اسم العميل بالكامل</label><input type="text" id="cust-name"></div>
-                <div class="form-group"><label>رقم الجوال</label><input type="tel" id="cust-phone"></div>
+                <div class="form-group"><label>رقم الجوال</label><input type="tel" id="cust-phone" placeholder="مثال: 05xxxxxxx"></div>
                 <div class="form-group"><label>المركز التابع له</label><input type="text" id="cust-center"></div>
                 <div class="form-group"><label>رقم رخصة الغوص</label><input type="text" id="cust-license"></div>
                 <button type="button" class="btn-submit" onclick="saveCustomer()">تسجيل وتأكيد العميل</button>
@@ -61,7 +81,7 @@
             <div class="section-title">إنشاء فاتورة تأجير جديدة</div>
             <div class="form-container">
                 <div class="search-box-zone">
-                    <label style="color: #ff8c00; font-weight: bold;">البحث برقم العميل أو رقم الهوية:</label>
+                    <label style="color: #ff8c00; font-weight: bold;">البحث برقم العميل الموحد أو رقم الهوية:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px;">
                         <input type="text" id="search-customer-id" placeholder="أدخل رقم العميل أو الهوية">
                         <button type="button" onclick="searchCustomer()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">بحث 🔍</button>
@@ -96,38 +116,68 @@
             <div class="section-title">إرجاع واستلام المعدات</div>
             <div class="form-container">
                 <div class="search-box-zone">
-                    <label style="color: #ff8c00; font-weight: bold;">ابحث برقم الفاتورة أو الهوية:</label>
+                    <label style="color: #ff8c00; font-weight: bold;">ابحث برقم الفاتورة، رقم العميل الموحد، أو رقم الجوال:</label>
                     <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <input type="text" id="return-search-input" placeholder="مثال: R-1234">
-                        <button type="button" onclick="searchReturnData()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">جلب 📁</button>
+                        <input type="text" id="return-search-input" placeholder="مثال: R-1234 أو 05000000">
+                        <button type="button" onclick="searchReturnData()" style="width: auto; padding: 0 20px; background: #333; color: #fff; border: 1px solid #555;">جلب البيانات 📁</button>
                     </div>
                 </div>
 
-                <div id="invoice-details-card" class="details-card" style="display: none;">
-                    <p><strong>رقم الفاتورة:</strong> <span id="ret-invoice-id" style="color: #ff8c00; font-weight: bold;">-</span></p>
-                    <p><strong>اسم العميل:</strong> <span id="ret-cust-name">-</span></p>
-                    <p><strong>المعدات:</strong> <span id="ret-eq-details" style="color: #ff8c00;">-</span></p>
-                    <p><strong>الإجمالي:</strong> <span id="ret-total">-</span> ريال</p>
+                <div id="invoice-details-card" class="details-card" style="display: none; background: #151515; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #333;">
+                    <p style="margin: 5px 0;"><strong>رقم الفاتورة:</strong> <span id="ret-invoice-id" style="color: #ff8c00; font-weight: bold;">-</span></p>
+                    <p style="margin: 5px 0;"><strong>اسم العميل:</strong> <span id="ret-cust-name">-</span></p>
+                    
+                    <div id="items-checkbox-list" style="margin: 15px 0; padding: 10px; background: #222; border-radius: 6px;">
+                        </div>
+
+                    <div class="damage-control-zone" style="margin-top: 15px;">
+                        <label class="checkbox-container" style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="is-damaged-checkbox" onchange="toggleDamageNote()">
+                            <span style="color: #ff3333; font-weight: bold; margin-right: 10px;">تنبيه: تم رصد ضرر أو تلف في القطع المستلمة!</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" id="damage-note-container" style="display: none; margin-top: 15px;">
+                        <label style="color: #ff3333;">تفاصيل الضرر أو النقص</label>
+                        <textarea id="damage-note" rows="3" placeholder="اكتب الملاحظة الفنية للقطع المتضررة..."></textarea>
+                    </div>
+
+                    <button type="button" class="btn-submit" style="background: #ff3333; color: #fff; margin-top: 20px;" onclick="saveReturn()">تأكيد الاستلام وإغلاق الملف</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="invoices-page" class="page-section">
+            <div class="section-title">📂 سجل واستعلام الفواتير</div>
+            <div class="form-container">
+                
+                <div class="filter-buttons-zone">
+                    <button class="btn-filter" onclick="renderInvoices('all')">كل الفواتير</button>
+                    <button class="btn-filter" onclick="renderInvoices('active')" style="border-color: #ff8c00; color: #ff8c00;">الفواتير الفعالة (تحت التأجير)</button>
+                    <button class="btn-filter" onclick="renderInvoices('closed')" style="border-color: #00ffcc; color: #00ffcc;">الفواتير المقفلة</button>
                 </div>
 
-                <div class="damage-control-zone">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="is-damaged-checkbox" onchange="toggleDamageNote()">
-                        <span style="color: #ff3333; font-weight: bold; margin-right: 10px;">تنبيه: تم رصد ضرر!</span>
-                    </label>
+                <div style="overflow-x: auto;">
+                    <table class="styled-table" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>اسم العميل</th>
+                                <th>المعدات المؤجرة</th>
+                                <th>الحالة الحالية</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-table-body">
+                            <tr><td colspan="5" style="text-align: center;">لا توجد فواتير مسجلة حالياً.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="form-group" id="damage-note-container" style="display: none; margin-top: 15px;">
-                    <label style="color: #ff3333;">تفاصيل الضرر</label>
-                    <textarea id="damage-note" rows="3" placeholder="اكتب الملاحظة..."></textarea>
-                </div>
-
-                <button type="button" class="btn-submit" style="background: #ff3333; color: #fff; margin-top: 20px;" onclick="saveReturn()">تأكيد الاستلام وإغلاق الملف</button>
             </div>
         </section>
 
         <section id="stats-page" class="page-section">
-            <div class="section-title">📊 ملخص المعدات</div>
+            <div class="section-title">📊 ملخص استخدام المعدات</div>
             <div style="overflow-x: auto;">
                 <table class="styled-table">
                     <thead>
@@ -135,11 +185,11 @@
                             <th>السيريال</th>
                             <th>المعدة</th>
                             <th>مرات التأجير</th>
-                            <th>الأيام</th>
+                            <th>إجمالي الأيام</th>
                         </tr>
                     </thead>
                     <tbody id="stats-table-body">
-                        <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
+                        <tr><td colspan="4" style="text-align: center;">جاري تحميل الإحصائيات...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -147,6 +197,6 @@
 
     </main>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>
