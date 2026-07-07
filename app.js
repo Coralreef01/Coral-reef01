@@ -7,7 +7,7 @@ let localEquipment = JSON.parse(localStorage.getItem('localEquipment')) || [];
 let localRentals = JSON.parse(localStorage.getItem('localRentals')) || [];
 let currentActiveCustomer = null; 
 
-// دالة التنقل الآمنة القائمة على الكلاسات لمنع التداخل نهائياً
+// دالة التنقل
 window.showPage = function(pageId) {
     document.querySelectorAll('.page-section').forEach(page => {
         page.classList.remove('active');
@@ -50,7 +50,7 @@ window.updateEquipmentDropdown = function() {
 window.addSelectedEquipmentToInvoice = function() {
     const select = document.getElementById('available-equipment-select');
     if (!select || select.value === "") {
-        alert("⚠️ الرجاء إضافة معدات للنظام واختيار إحداها."); return;
+        alert("⚠️ الرجاء اختيار معدة."); return;
     }
     const eq = localEquipment[select.value];
     tempSelectedItems.push(eq);
@@ -81,8 +81,7 @@ window.saveEquipment = async function() {
     const price = document.getElementById('eq-price').value.trim();
 
     if(!serial || !company || !type || !price) {
-        alert("⚠️ الرجاء تعبئة السيريال، الشركة، النوع، والسعر على الأقل!");
-        return;
+        alert("⚠️ الرجاء تعبئة السيريال، الشركة، النوع، والسعر!"); return;
     }
 
     const eq = { serial, company, type, size, color, price };
@@ -119,7 +118,7 @@ window.saveCustomer = async function() {
     localStorage.setItem('localCustomers', JSON.stringify(localCustomers));
     
     sendToGoogleSheet({ action: 'addCustomer', customerSerial: assignedSerial, ...cust });
-    alert(`✅ تم تسجيل العميل بنجاح! السيريال الموحد له هو: ${assignedSerial}`);
+    alert(`✅ تم تسجيل العميل! السيريال: ${assignedSerial}`);
     
     document.getElementById('cust-id').value = '';
     document.getElementById('cust-name').value = '';
@@ -146,14 +145,14 @@ window.searchCustomer = function() {
 };
 
 window.saveRental = async function() {
-    if (tempSelectedItems.length === 0) { alert("⚠️ الرجاء اختيار معدة أولاً!"); return; }
+    if (tempSelectedItems.length === 0) { alert("⚠️ الرجاء اختيار معدة!"); return; }
     
     const name = document.getElementById('rental-customer-name').value;
     const phone = document.getElementById('rental-customer-phone').value;
     const days = document.getElementById('rental-days').value;
     const total = document.getElementById('final-total').innerText;
 
-    if(!name) { alert("⚠️ الرجاء البحث عن العميل أولاً لملء بياناته!"); return; }
+    if(!name) { alert("⚠️ ابحث عن العميل أولاً لملء بياناته!"); return; }
     
     const invoiceSerial = 'R-' + Math.floor(1000 + Math.random() * 9000);
     const eqDetails = tempSelectedItems.map(i => `${i.type} (${i.company})`).join(', ');
