@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     
+    <!-- كود حماية التنسيق لمنع تداخل الصفحات وتنسيق الأزرار الجديدة -->
     <style>
         .page-section { display: none !important; }
         .page-section.active { display: block !important; }
@@ -29,6 +30,23 @@
             background: #ff8c00;
             color: #000;
         }
+        .btn-action-view {
+            background: #ff8c00;
+            color: #000;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .management-card {
+            background: #151515;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ff8c00;
+        }
     </style>
 </head>
 <body>
@@ -48,6 +66,7 @@
 
     <main id="app-container">
 
+        <!-- 1. صفحة إضافة المعدات -->
         <section id="equipment-page" class="page-section active">
             <div class="section-title">إضافة معدة جديدة</div>
             <div class="form-container">
@@ -61,6 +80,7 @@
             </div>
         </section>
 
+        <!-- 2. صفحة تسجيل العملاء -->
         <section id="customers-page" class="page-section">
             <div class="section-title">تسجيل عميل جديد</div>
             <div class="form-container">
@@ -77,6 +97,7 @@
             </div>
         </section>
 
+        <!-- 3. صفحة إنشاء الفواتير (التأجير) -->
         <section id="rentals-page" class="page-section">
             <div class="section-title">إنشاء فاتورة تأجير جديدة</div>
             <div class="form-container">
@@ -112,6 +133,7 @@
             </div>
         </section>
 
+        <!-- 4. صفحة الإرجاع والاستلام -->
         <section id="return-page" class="page-section">
             <div class="section-title">إرجاع واستلام المعدات</div>
             <div class="form-container">
@@ -127,8 +149,7 @@
                     <p style="margin: 5px 0;"><strong>رقم الفاتورة:</strong> <span id="ret-invoice-id" style="color: #ff8c00; font-weight: bold;">-</span></p>
                     <p style="margin: 5px 0;"><strong>اسم العميل:</strong> <span id="ret-cust-name">-</span></p>
                     
-                    <div id="items-checkbox-list" style="margin: 15px 0; padding: 10px; background: #222; border-radius: 6px;">
-                        </div>
+                    <div id="items-checkbox-list" style="margin: 15px 0; padding: 10px; background: #222; border-radius: 6px;"></div>
 
                     <div class="damage-control-zone" style="margin-top: 15px;">
                         <label class="checkbox-container" style="display: flex; align-items: center; cursor: pointer;">
@@ -147,14 +168,36 @@
             </div>
         </section>
 
+        <!-- 5. صفحة سجل الفواتير مع ميزة الاستعلام الإداري والتحكم -->
         <section id="invoices-page" class="page-section">
             <div class="section-title">📂 سجل واستعلام الفواتير</div>
             <div class="form-container">
                 
+                <!-- لوحة التفاصيل والتحكم السريع بالفاتورة المستعلم عنها (تظهر عند الضغط على عِرض) -->
+                <div id="invoice-management-zone" class="management-card" style="display: none;">
+                    <h3 style="color: #ff8c00; margin-top: 0; margin-bottom: 15px;">🔎 تفاصيل وإدارة الفاتورة المحددة</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; color: #eee; margin-bottom: 15px;">
+                        <p><strong>رقم الفاتورة:</strong> <span id="mgr-inv-id" style="color:#ff8c00; font-weight:bold;"></span></p>
+                        <p><strong>حالة الفاتورة الحالية:</strong> <span id="mgr-inv-status" style="font-weight:bold;"></span></p>
+                        <p><strong>اسم العميل:</strong> <span id="mgr-inv-customer"></span></p>
+                        <p><strong>رقم الجوال:</strong> <span id="mgr-inv-phone"></span></p>
+                        <p style="grid-column: span 2;"><strong>المعدات المشمولة:</strong> <span id="mgr-inv-details" style="color: #aaa;"></span></p>
+                        <p><strong>الإجمالي النهائي:</strong> <span id="mgr-inv-total" style="color:#ff8c00; font-weight:bold;"></span> ريال</p>
+                    </div>
+                    
+                    <!-- أزرار التحكم وتغيير الحالة المباشرة -->
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-mgr-close" onclick="changeStatusFromManager('مغلقة (سليمة)')" style="background: #00ffcc; color: #000; font-weight: bold; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1;">🔒 قفل الفاتورة (مغلقة)</button>
+                        <button type="button" id="btn-mgr-open" onclick="changeStatusFromManager('تحت التأجير')" style="background: #ff8c00; color: #000; font-weight: bold; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1;">🔓 إعادة فتح الفاتورة (تحت التأجير)</button>
+                        <button type="button" onclick="document.getElementById('invoice-management-zone').style.display='none'" style="background: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 6px; cursor: pointer;">إغلاق المعاينة ✖️</button>
+                    </div>
+                </div>
+                
+                <!-- أزرار الفلترة والتصفية السريعة للجدول -->
                 <div class="filter-buttons-zone">
                     <button class="btn-filter" onclick="renderInvoices('all')">كل الفواتير</button>
-                    <button class="btn-filter" onclick="renderInvoices('active')" style="border-color: #ff8c00; color: #ff8c00;">الفواتير الفعالة (تحت التأجير)</button>
-                    <button class="btn-filter" onclick="renderInvoices('closed')" style="border-color: #00ffcc; color: #00ffcc;">الفواتير المقفلة</button>
+                    <button class="btn-filter" onclick="renderInvoices('active')" style="border-color: #ff8c00; color: #ff8c00;">الفعالة (تحت التأجير)</button>
+                    <button class="btn-filter" onclick="renderInvoices('closed')" style="border-color: #00ffcc; color: #00ffcc;">المقفلة</button>
                 </div>
 
                 <div style="overflow-x: auto;">
@@ -163,9 +206,9 @@
                             <tr>
                                 <th>رقم الفاتورة</th>
                                 <th>اسم العميل</th>
-                                <th>المعدات المؤجرة</th>
                                 <th>الحالة الحالية</th>
                                 <th>الإجمالي</th>
+                                <th style="text-align: center;">إجراء</th>
                             </tr>
                         </thead>
                         <tbody id="invoices-table-body">
@@ -176,6 +219,7 @@
             </div>
         </section>
 
+        <!-- 6. صفحة الإحصائيات وملخص المعدات -->
         <section id="stats-page" class="page-section">
             <div class="section-title">📊 ملخص استخدام المعدات</div>
             <div style="overflow-x: auto;">
@@ -197,6 +241,6 @@
 
     </main>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>
